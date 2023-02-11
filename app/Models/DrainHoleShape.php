@@ -4,13 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 class DrainHoleShape extends Model
 {
-    use HasFactory;
+    use HasFactory,LogsActivity;
     protected $table = 'pp_drain_hole_shapes';
     protected $primaryKey = 'drain_hole_shape_id';
     protected $fillable = [];
-    
+    protected static $logAttributes = [
+        'drain_hole_shape_id',
+        'shape',
+        'status',
+    ];
+    protected static $logOnlyDirty = true;
+    public function tapActivity(Activity $activity, string $eventName)
+    {
+        $activity->log_name = "pp_drain_hole_shapes";
+        $activity->description = $eventName;
+        $activity->causer_id = Auth::user()->id;
+    }
 
 }

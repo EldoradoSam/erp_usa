@@ -3,17 +3,18 @@
 namespace App\Http\Controllers;
 
 use App\Models\CustomerOrder;
+use App\Models\CustomerOrderData;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-
+use Illuminate\Support\Facades\DB;
 
 class CustomerOrderListController extends Controller
 {
     public function allCustomerOrder()
     {
         try {
-            $customer_orders = CustomerOrder::orderBy('order_id', 'DESC')->get();
+            $customer_orders = CustomerOrder::where('create_from','=','USA')->orderBy('order_id', 'DESC')->get();
             $responseBody = $this->responseBody(true, "CustomerOrderListController", "allCustomerOrder", $customer_orders);
         } catch (\Exception $exception) {
             $responseBody = $this->responseBody(false, "CustomerOrderListController", "allCustomerOrder", $exception);
@@ -21,6 +22,36 @@ class CustomerOrderListController extends Controller
         return response()->json(["data" => $responseBody]);
     }
 
+
+    function delete($id)
+    {
+        try {
+            $order = CustomerOrder::where('order_id', $id);
+            if ($order) {
+                if ($order->delete()) {
+                    $query = 'DELETE FROM pp_customer_orders_data WHERE order_id = "' . $id . '"';
+                    DB::select($query);
+                }
+            }
+
+            $responseBody = $this->responseBody(true, "deleteOrder", "deleted", true);
+        } catch (\Exception $ex) {
+            $responseBody = $this->responseBody(false, "deleteOrder", "error", $ex);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+
+    public function isAllowcateOrder($id)
+    {
+
+        $order = CustomerOrder::where([['order_id', '=', $id], ['production_status', '>', 0]])->first();
+        if ($order) {
+            return 1;
+        }
+        return 0;
+    }
 
 
     /**

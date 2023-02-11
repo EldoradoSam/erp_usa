@@ -7,13 +7,14 @@ use App\Models\DrainHoleSize;
 use App\Models\Plantholesize;
 use App\Models\Productmix;
 use App\Models\ProductSize;
+use App\Models\Reason;
 use App\Models\Shippingterm;
 use App\Models\Washedlevel;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\DB;
-
+use Illuminate\Support\Facades\Redis;
 
 class SettingsController extends Controller
 {
@@ -186,6 +187,28 @@ class SettingsController extends Controller
 
 
 
+    public function saveReason(Request $request)
+    {
+
+        try {
+            $value = $request->get('value');
+            $object = new Reason();
+            $object->reason = $value;
+            $object->status = true;
+            $save = $object->save();
+
+            if ($save) {
+                $responseBody = $this->responseBody(true, "Reason", "saveReason", null);
+            }
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "Reason", 'saveReason', $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+
+
     /**
      * allTown
      * This function is used to search all town records from the database.
@@ -285,6 +308,18 @@ class SettingsController extends Controller
             $responseBody = $this->responseBody(true, "ProductSize", "all", $result);
         } catch (\Exception $exception) {
             $responseBody = $this->responseBody(false, "ProductSize", "error", $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+    public function allReason()
+    {
+        try {
+            $result = SettingsController::allSettings('Reason');
+            $responseBody = $this->responseBody(true, "Reason", "all", $result);
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "Reason", "error", $exception);
         }
         return response()->json(["data" => $responseBody]);
     }
@@ -457,6 +492,25 @@ class SettingsController extends Controller
     }
 
 
+    public function updateReason(Request $request, $id)
+    {
+
+        try {
+            $value = $request->get('Reason');
+
+            $object = Reason::find($id);
+            $object->reason = $value;
+            $update = $object->save();
+            if ($update) {
+                $responseBody = $this->responseBody(true, "Reason", "updated", null);
+            }
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "Reason", "error", null);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
 
 
 
@@ -483,6 +537,8 @@ class SettingsController extends Controller
             return DrainHoleShape::all();
         } else if ($name == 'ProductSize') {
             return ProductSize::all();
+        } else if ($name == 'Reason') {
+            return Reason::all();
         }
     }
 
@@ -692,6 +748,26 @@ class SettingsController extends Controller
     }
 
 
+
+    public function desableReason(Request $request, $id)
+    {
+        try {
+
+            $value = $request->get('status');
+
+            $object = Reason::find($id);
+            $object->status = $value;
+            $update = $object->save();
+            if ($update) {
+                $responseBody = $this->responseBody(true, "Reason", "updated", null);
+            }
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "Reason", "error", null);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
     /**
      * delete
      * This function is used to delete recruitment from recruitment id.
@@ -815,6 +891,22 @@ class SettingsController extends Controller
             }
         } catch (\Exception $exception) {
             $responseBody = $this->responseBody(false, "ProductSize", "error", $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+
+    public function deleteReason($id)
+    {
+        try {
+            $reason = Reason::find($id);
+            $delete = $reason->delete();
+            if ($delete) {
+                $responseBody = $this->responseBody(true, "Reason", "deleted", null);
+            }
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "Reason", "error", $exception);
         }
         return response()->json(["data" => $responseBody]);
     }

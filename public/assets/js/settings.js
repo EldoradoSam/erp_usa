@@ -25,6 +25,7 @@ const DRAIN_HOLE_SIZE = "DrainHoleSize";
 const DRAIN_HOLE_SHAPE = "DrainHoleShape";
 const PRODUCT_SIZE = "ProductSize";
 const SUB_SECTION = "SubSection";
+const REASON = "Reason";
 
 
 const TITLE_MAP = {
@@ -35,6 +36,7 @@ const TITLE_MAP = {
     'saveDrainHoleSize': 'Add new Drain hole size',
     'saveDrainHoleShape': 'Add new Drain hole shape',
     'saveProductSize': 'Add new Product size',
+    'saveReason': 'Add new Reason',
    
 
     'updateShippingTerm': 'Update shipping term',
@@ -44,6 +46,7 @@ const TITLE_MAP = {
     'updateDrainHoleSize': 'Update Drain hole size',
     'updateDrainHoleShape': 'Update Drain hole shape',
     'updateProductSize': 'Update Product size',
+    'updateReason': 'Update Reason',
 };
 
 
@@ -55,6 +58,7 @@ const URL_MAP = {
     'DrainHoleSize': '/settings/drainholesize',
     'DrainHoleShape': '/settings/drainholeshape',
     'ProductSize': '/settings/productsize',
+    'Reason': '/settings/reason',
   
     
 };
@@ -67,6 +71,7 @@ const DELETE_MAP ={
     'DrainHoleSize': '/settings/drainholesize/delete',
     'DrainHoleSize': '/settings/drainholeshape/delete',
     'ProductSize': '/settings/productsize/delete',
+    'Reason': '/settings/reason/delete',
 };
 
 const URL_MAP_SEARCH = {
@@ -77,6 +82,7 @@ const URL_MAP_SEARCH = {
     'DrainHoleSize': '/settings/drainholesizes',
     'DrainHoleShape': '/settings/drainholeshape',
     'ProductSize': '/settings/productsize',
+    'Reason': '/settings/reason',
     
 };
 
@@ -94,6 +100,9 @@ function showModal(event, name) {
     $('#txtSettingName').attr('name', name);
     $('#settingsAddModalTitle').text(title);
 
+    if(name == REASON){
+        $('#lblNameModal').text('Reason');
+    }
     if (event == SAVE) {
         $('#btnSetting').attr('name', 'save');
         $('#btnSetting').text('Save');
@@ -593,6 +602,23 @@ function loadTable(name, result) {
             row += '<label class="switch">';
             row += '<input type="checkbox" id="' + result[i].product_size_id + '" onchange="disable(event,' + "'ProductSize'" + ')" ' + disable[result[i].status] + '>';
 
+        }  else if (name == REASON) {
+
+            row += '<td class="id" id="' + result[i].reason_id + '">' + generateID(result[i].reason_id) + '</td>';
+            row += '<td>' + result[i].reason + '</td>';
+            row += '<td class="edit">';
+            row += '<button type="button" class="btn btn-primary setting-edit-btn" id="' + result[i].reason_id + '" onclick="showModal(' + "'update'" + ',' + "'Reason'" + ')">';
+            row += '<i class="fa fa-pencil-square-o" aria-hidden="true"></button>';
+
+            row += '</td>';
+            row += '<td class="edit">';
+            row += '<button type="button" class="btn btn-danger setting-edit-btn" id="' + result[i].reason_id + '" onclick="_deleted(' + result[i].reason_id + ',' + "'Reason'" +')">';
+            row += '<i class="fa fa-trash" aria-hidden="true"></button>';
+            row += '</td>';
+            row += '<td class="disable">';
+            row += '<label class="switch">';
+            row += '<input type="checkbox" id="' + result[i].reason_id + '" onchange="disable(event,' + "'Reason'" + ')" ' + disable[result[i].status] + '>';
+
         }
         row += '<span class="slider round"></span>';
         row += '</label>';
@@ -600,6 +626,7 @@ function loadTable(name, result) {
         row += '</tr>';
         tbody += row;
     }
+
     $(tableName).empty();
     $(tableName).append(tbody);
 

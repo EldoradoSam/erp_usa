@@ -41,7 +41,7 @@
                         <tr>
                             <th>Customer Id</th>
                             <th>Customer Name</th>
-                            <th>Address</th>
+                            <!--<th>Address</th>!-->
                             <th>Edit</th>
                             <th>View</th>
                             <th>Delete</th>

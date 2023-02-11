@@ -51,7 +51,7 @@
                         </li>!-->
                         </li>
                         <li class="nav-item">
-                            <a class="nav-link" id="pills-Notes-tab" data-toggle="pill" href="#tbNotes" role="tab" aria-controls="pills-Notes" aria-selected="false">Note</a>
+                            <a class="nav-link" id="pills-Notes-tab" data-toggle="pill" href="#tbDelivery" role="tab" aria-controls="pills-Delivery" aria-selected="false">Delivery</a>
                         </li>
 
                     </ul>
@@ -77,22 +77,23 @@
                                     <textarea class="form-control" id="txtAddress" name="txtAddress" placeholder="Address"></textarea>
                                 </div>
                                 <div class="col-md-6">
-                                    <label for="address">Customer Delivery Address & Contact</label>
-                                    <textarea class="form-control" id="txtDeliveryAddress" name="txtDeliveryAddress" placeholder="Delivery Address"></textarea>
-                                </div>
-                            </div>
-                            <div class="form-row">
-                                <div class="col-md-6">
                                     <label for="address">Consignee Name, Address, Contact</label>
                                     <textarea class="form-control" id="txtCosigneeDetails" name="txtCosigneeDetails" placeholder="Consignee Contacts"></textarea>
                                 </div>
+                                <!--<div class="col-md-6">
+                                    <label for="address">Customer Delivery Address & Contact</label>
+                                    <textarea class="form-control" id="txtDeliveryAddress" name="txtDeliveryAddress" placeholder="Delivery Address"></textarea>
+                                </div>!-->
+                            </div>
+                            <div class="form-row">
+
                                 <div class="col-md-6">
                                     <label for="address">Notify Party Name, Address, Contact (If in USA leave blank)</label>
                                     <textarea class="form-control" id="txtPartyDetails" name="txtPartyDetails" placeholder="Party Name, Address"></textarea>
                                 </div>
                             </div>
                             <div class="form-row">
-                                <div class="col-md-8">
+                                <div class="col-md-6">
                                     <label for="webAddress">Web Address</label>
                                     <input type="text" class="form-control" name="txtWebAddress" id="txtWebAddress" placeholder="Web Address" required="">
                                 </div>
@@ -120,7 +121,7 @@
                             </div>!-->
 
                             <div class="form-row">
-                                <div class="col-md-8">
+                                <div class="col-md-6">
                                     <label>Notes</label>
                                     <textarea class="form-control" id="textNotes" name="textNotes" placeholder="Notes"></textarea>
                                 </div>
@@ -160,15 +161,30 @@
                         <div class="tab-pane fade" id="tbShipingAddress" role="tabpanel" aria-labelledby="pills-ShipingAddress-tab">
 
                         </div>
-                        <div class="tab-pane fade" id="tbNotes" role="tabpanel" aria-labelledby="pills-notes-tab">
-                            <div class="form-row">
-                                <div class="col-md-12 mb-5">
-                                    <i class="fa fa-pencil text-info" aria-hidden="true"></i>
-                                    <label for="txtNotes">Notes</label>
-                                    <br>
-                                    <textarea class="form-control" id="txtNotes" name="txtNotes"></textarea>
-                                    <div class="valid-feedback">
-                                        Looks good!
+                        <div class="tab-pane fade" id="tbDelivery" role="tabpanel" aria-labelledby="pills-delivery-tab">
+                            <div class="mb-3">
+                                <button type="button" id="btnDeliveryContactsmodal" class="btn btn-primary" data-target="" data-whatever="@getbootstrap" name="save">
+                                    <i class="fa fa-plus" aria-hidden="true"></i>
+                                </button>
+                            </div>
+                            <div class="row" id='rowBottomTable'>
+                                <div class="col-md-12">
+                                    <div class="table-responsive">
+                                        <!-- Required for Responsive -->
+                                        <table id="deliveryContactTable" class="table table-striped  datatable">
+                                            <thead>
+                                                <tr>
+                                                    <th>Delivery Address</th>
+                                                    <th>Contact</th>
+                                                    <th class="edit">Edit</th>
+                                                    <th class="delete">delete</th>
+
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+
+                                            </tbody>
+                                        </table>
                                     </div>
                                 </div>
                             </div>
@@ -279,6 +295,42 @@
                 <div class="modal-footer">
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
                     <button type="button" class="btn btn-primary" id="btnSaveContact">Save</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+
+<div class="modal fade" id="deliveryContactsModal" tabindex="-1" role="dialog" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="settingsAddModalTitle">Add Customer Delivery Address & Contact</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                    <i class="ti-close"></i>
+                </button>
+            </div>
+            <form method="POST" id="contactfrm">
+                <div class="modal-body" id="settingsAddModalBody">
+                    <input type="hidden" id="hidDeliveryDataID" name="hidDeliveryDataID" value>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label>Address</label>
+                            <textarea class="form-control" id="txtDeliveryAddress" name="deliveryAddress"></textarea>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label>Contact No</label>
+                            <input type="text" class="form-control" id="txtDeliveryContact" name="deliveryContact"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="btnSaveDeliveryContact">Save</button>
                 </div>
             </form>
         </div>

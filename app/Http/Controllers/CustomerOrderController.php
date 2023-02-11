@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 // use Dotenv\Validator;
 
+use App\Mail\MailData;
 use App\Models\Country;
 use App\Models\Customer;
+use App\Models\CustomerDelivery;
 use App\Models\CustomerOrder;
 use App\Models\CustomerOrderData;
 use App\Models\DrainHoleShape;
 use App\Models\DrainHoleSize;
+use App\Models\Email;
 use App\Models\OrderAttachment;
 use App\Models\Productmix;
 use App\Models\Shippingterm;
@@ -54,6 +57,7 @@ class CustomerOrderController extends Controller
             $order->remarks = $request->get('remarks');
             $order->production_status = true;
             $order->status = true;
+            $order->order_status = true;
             $save = $order->save();
 
             if ($save) {
@@ -564,17 +568,17 @@ class CustomerOrderController extends Controller
             //$customer_arr = [];
             //$this->middleware(function ($request, $next) {
 
-                /*if (Auth::user()->user_type == 'Customer') {
+            /*if (Auth::user()->user_type == 'Customer') {
                     $customer_arr = [];
                 } else {*/
-                    $customer_arr = [];
+            $customer_arr = [];
 
-                    $customers = Customer::all();
+            $customers = Customer::where('create_from', '=', 'USA')->get();
 
-                    foreach ($customers as $customer) {
-                        array_push($customer_arr, ["img" => "", "id" => $customer['customer_id'], "value" => $customer['customer_name']]);
-                    }
-                //}
+            foreach ($customers as $customer) {
+                array_push($customer_arr, ["img" => "", "id" => $customer['customer_id'], "value" => $customer['customer_name']]);
+            }
+            //}
             //});
 
 
@@ -705,11 +709,16 @@ class CustomerOrderController extends Controller
 
 
 
-    public function allOrderDataWithToken($id, $token)
+    public function allOrderDataWithToken($id, $token, $action)
     {
         try {
-
-            $orderData =  DB::select('SELECT *FROM pp_customer_orders_data WHERE token = "' . $token . '" AND  (order_id = "' . $id . '" OR order_id = "0")');
+            $query = '';
+            if ($action == 'Save') {
+                $query = 'SELECT *FROM pp_customer_orders_data WHERE  token = "' . $token . '"';
+            } else if ($action == 'edit') {
+                $query = 'SELECT *FROM pp_customer_orders_data WHERE order_id = "' . $id . '" OR  token = "' . $token . '"';
+            }
+            $orderData =  DB::select($query);
             $responseBody = $this->responseBody(true, "allOrderDataWithToken", "found", $orderData);
         } catch (\Exception $exception) {
             $responseBody = $this->responseBody(false, "allOrderDataWithToken", "error", $exception);
@@ -776,9 +785,10 @@ class CustomerOrderController extends Controller
 
             $orderData = json_decode($request->get('order_data'));
             $customer_order_data = new CustomerOrderData();
-            $customer_order_data->order_id = "000";
+            $customer_order_data->order_id = $orderData->order_id;
             $customer_order_data->product_type = $orderData->product_type;
             $customer_order_data->product_code = $orderData->product_code;
+            $customer_order_data->description = $orderData->description;
             $customer_order_data->product_dimensions = $orderData->product_dimension;
             $customer_order_data->product_mix_id = $orderData->product_mix_id;
             $customer_order_data->washed_level_id = $orderData->washed_level_id;
@@ -840,6 +850,7 @@ class CustomerOrderController extends Controller
             $customer_order->invoice_num = $order->invoice_num;
             $customer_order->bill_address = $order->bill_address;
             $customer_order->delivery_address = $order->delivery_address;
+            $customer_order->delivery_address_id = $order->delivery_address_id;
             $customer_order->cosignee_details = $order->cosignee_details;
             $customer_order->party_details = $order->party_details;
             $customer_order->date = $order->date;
@@ -849,17 +860,33 @@ class CustomerOrderController extends Controller
             $customer_order->name_fill = $order->name_fill;
             $customer_order->remarks = $order->remarks;
             $customer_order->production_status = $order->production_status;
+            $customer_order->fund_status = 0;
             $customer_order->status = $order->status;
+            $customer_order->order_status = 0;
+            $customer_order->created_by = Auth::user()->id;
+            $customer_order->updated_by = Auth::user()->id;
+            $customer_order->create_from = 'USA';
             if ($customer_order->save()) {
                 $orders_data = CustomerOrderData::where([['order_id', '=', 0], ['token', '=', $order->token]])->get();
                 foreach ($orders_data as $data) {
                     $data->order_id = $customer_order->order_id;
                     $data->update();
                 }
+                $subject = "PO No : " . $order->purchase_order;
+                $email_body = "PO No : " . $order->purchase_order . "<br> Created By : " . Auth::user()->name;
+                $attachment_no = 1;
                 $order_attachments = OrderAttachment::where([['order_id', '=', 0], ['token', '=', $order->token]])->get();
                 foreach ($order_attachments as $attachment) {
                     $attachment->order_id = $customer_order->order_id;
                     $attachment->update();
+                    $email_body .= "<br> Description : " . $attachment->description;
+                    $email_body .= "<br> Attachment" . $attachment_no . " : " . $attachment->file_path;
+                    $attachment_no += 1;
+                }
+
+                $recievers = MailData::getRecievers();
+                foreach ($recievers as $address) {
+                    MailController::createMail($subject, $email_body, MailData::getSender(), $address);
                 }
             }
             $responseBody = $this->responseBody(true, "saveOrder", "found", $customer_order->order_id);
@@ -883,6 +910,7 @@ class CustomerOrderController extends Controller
             $customer_order_data =  CustomerOrderData::find($id);
             $customer_order_data->product_type = $orderData->product_type;
             $customer_order_data->product_code = $orderData->product_code;
+            $customer_order_data->description = $orderData->description;
             $customer_order_data->product_dimensions = $orderData->product_dimension;
             $customer_order_data->product_mix_id = $orderData->product_mix_id;
             $customer_order_data->washed_level_id = $orderData->washed_level_id;
@@ -943,6 +971,7 @@ class CustomerOrderController extends Controller
             $customer_order->invoice_num = $order->invoice_num;
             $customer_order->bill_address = $order->bill_address;
             $customer_order->delivery_address = $order->delivery_address;
+            $customer_order->delivery_address_id = $order->delivery_address_id;
             $customer_order->cosignee_details = $order->cosignee_details;
             $customer_order->party_details = $order->party_details;
             $customer_order->date = $order->date;
@@ -953,16 +982,27 @@ class CustomerOrderController extends Controller
             $customer_order->remarks = $order->remarks;
             $customer_order->production_status = $order->production_status;
             $customer_order->status = $order->status;
+            $customer_order->updated_by = Auth::user()->id;
             if ($customer_order->update()) {
                 $orders_data = CustomerOrderData::where([['order_id', '=', 0], ['token', '=', $order->token]])->get();
                 foreach ($orders_data as $data) {
                     $data->order_id = $customer_order->order_id;
                     $data->update();
                 }
+                $subject = "PO No : " . $order->purchase_order;
+                $email_body = "PO No : " . $order->purchase_order . "<br> Updated By : " . Auth::user()->name;
+                $attachment_no = 1;
                 $order_attachments = OrderAttachment::where([['order_id', '=', 0], ['token', '=', $order->token]])->get();
                 foreach ($order_attachments as $attachment) {
                     $attachment->order_id = $customer_order->order_id;
                     $attachment->update();
+                    $email_body .= "<br> Description : " . $attachment->description;
+                    $email_body .= "<br> Attachment" . $attachment_no . " : " . $attachment->file_path;
+                    $attachment_no += 1;
+                }
+                $recievers = MailData::getRecievers();
+                foreach ($recievers as $address) {
+                    MailController::createMail($subject, $email_body, MailData::getSender(), $address);
                 }
             }
             $responseBody = $this->responseBody(true, "updateCustomerOrder", "found", true);
@@ -1021,7 +1061,8 @@ class CustomerOrderController extends Controller
         $token = $request->get('attachmnet_token');
         $file = $request->file('file');
         $file_name = $file->getClientOriginalName();
-        $filename = uniqid() . '_' . time() . '.' . $file_name;
+        $filename = 'http://127.0.0.1:8000/order/' . uniqid() . '_' . time() . '.' . str_replace(' ', '_', $file_name);
+        //$filename = 'https://usa.riococo-mmj.com/order/' . uniqid() . '_' . time() . '.' .str_replace(' ', '_', $file_name);
         $file->move(public_path('order'), $filename);
 
         $order_attachment = new OrderAttachment();
@@ -1044,6 +1085,92 @@ class CustomerOrderController extends Controller
             $responseBody = $this->responseBody(true, "allAttachment", "found", $attachment);
         } catch (\Exception $exception) {
             $responseBody = $this->responseBody(false, "allAttachment", "error", $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+    public function allAttachmentEditViewMode($id)
+    {
+        try {
+
+            $attachment = DB::select('SELECT *FROM pp_order_attachments WHERE  order_id = "' . $id . '"');
+            $responseBody = $this->responseBody(true, "allAttachment", "found", $attachment);
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "allAttachment", "error", $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+    public function checkOrderStatus($id)
+    {
+        try {
+            $customerOrder = CustomerOrder::find($id);
+            $responseBody = $this->responseBody(true, "CustomerOrderController", "checkOrderStatus", $customerOrder->order_status);
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "CustomerOrderController", "error", $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+
+    public function customerAllDeliveryAddress($id)
+    {
+        try {
+            $deliveryData = CustomerDelivery::where('customer_id', '=', $id)->get();
+            $responseBody = $this->responseBody(true, "CustomerOrderController", "customerAllDeliveryAddress", $deliveryData);
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "CustomerOrderController", "error", $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+    public function isDuplicateFactoryPO($id)
+    {
+        try {
+            $order = CustomerOrder::where('factory_po_num', '=', $id)->first();
+            $bool = false;
+            if ($order) {
+                $bool = true;
+            }
+            $responseBody = $this->responseBody(true, "CustomerOrderController", "isDuplicateFactoryPO", $bool);
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "CustomerOrderController", "error", $exception);
+        }
+        return response()->json(["data" => $responseBody]);
+    }
+
+
+
+
+    public function saveAttachmentViewOrder(Request $request)
+    {
+        try {
+            $purchase_order = $request->get('purchase_order');
+            $token = $request->get('token');
+            $order_id = $request->get('order_id');
+            $subject = "PO No : " . $purchase_order;
+            $email_body = "PO No : " . $purchase_order . "<br> Created By : " . Auth::user()->name;
+            $attachment_no = 1;
+            $order_attachments = OrderAttachment::where([['order_id', '=', 0], ['token', '=', $token]])->get();
+            foreach ($order_attachments as $attachment) {
+                $attachment->order_id = $order_id;
+                $attachment->update();
+                $email_body .= "<br> Description : " . $attachment->description;
+                $email_body .= "<br> Attachment" . $attachment_no . " : " . $attachment->file_path;
+                $attachment_no += 1;
+            }
+
+            $recievers = MailData::getRecievers();
+            foreach ($recievers as $address) {
+                MailController::createMail($subject, $email_body, MailData::getSender(), $address);
+            }
+            $responseBody = $this->responseBody(true, "CustomerOrderController", "saveAttachmentViewOrder", true);
+        } catch (\Exception $exception) {
+            $responseBody = $this->responseBody(false, "CustomerOrderController", "error", $exception);
         }
         return response()->json(["data" => $responseBody]);
     }

@@ -18,6 +18,7 @@ class CreateCustomerOrderThreadsTable extends Migration
             $table->integer('order_id');
             $table->integer('user_id');
             $table->string('user_name',100);
+            $table->string('user_type',100);
             $table->string('text', 200);
             $table->timestamps();
         });

@@ -38,9 +38,13 @@ $(document).ready(function () {
     allProductMix();
     allWashedLevel();
 
+    $('#btnAttachment').show();
+    $('#btnSubmitAttachment').hide();
+    $('#btnSaveAttachment').hide();
+
     $('#attachmnet_token').val(TOKEN);
 
-    $('#myTable').DataTable({
+    var attachmentTable = $('#myTable').DataTable({
         responsive: true,
         "order": [],
         "columns": [
@@ -53,7 +57,7 @@ $(document).ready(function () {
 
 
 
-    $('#CustomerOrderDataTable').DataTable({
+    var CustomerOrderDataTable = $('#CustomerOrderDataTable').DataTable({
         responsive: true,
         scrollX: true,
         paging: false,
@@ -101,6 +105,11 @@ $(document).ready(function () {
         ],
     });
 
+    /*if (user_type == 'USA OFFiCE') {
+        CustomerOrderDataTable.column(33).visible(false);
+        CustomerOrderDataTable.column(35).visible(false);
+    }*/
+
 
     /**
    * datepicker
@@ -136,19 +145,31 @@ $(document).ready(function () {
         var sPageURL = window.location.search.substring(1);
         var param = sPageURL.split('?');
         var id = param[0].split('=')[1].split('&')[0];
-        checkOrderStatus(id);
         UPDATE_ORDER_ID = id;
         ACTION = param[0].split('=')[2].split('&')[0];
         if (ACTION == 'edit') {
-            if(user_type == 'USA OFFiCE'){
-                $('#actionArea').hide();
+            $('#btnAttachment').show();
+            $('#btnSubmitAttachment').hide();
+            $('#btnSaveAttachment').hide();
+            if (user_type == 'USA OFFiCE') {
+                checkOrderStatus(id);
+
             }
             getCustomerMainOrder(id);
             $('#btnSaveOrder').text('Update');
         } else if (ACTION == 'view') {
+            $('#btnAttachment').hide();
+            $('#btnSubmitAttachment').show();
+            $('#btnSaveAttachment').show();
+            attachmentTable.column(3).visible(false);
+            if (user_type == 'USA OFFiCE') {
+                $('#btnAddOrderDataModel').hide();
+            }
             getCustomerMainOrder(id);
             $('#btnSaveOrder').hide();
         }
+        $('#btnSubmitThread').attr('onclick', 'submitThread(' + id + ')')
+        loadCustomerOrderThread(id);
 
 
     }
@@ -345,13 +366,31 @@ $(document).ready(function () {
     });
 
 
+    $('#btnSubmitAttachment').on('click', function () {
+        if (CUSTOMER_ID != undefined) {
+            $('#attachmentAddModal').modal('toggle');
+            return;
+        }
+        showWarningMessage('Please select customer...!');
+    });
+
+
     $('#btnResetOrder').on('click', function () {
         location.href = '/customerOrder';
+    });
+
+    $('#cmbDeliveryAddress').on('change', function () {
+        var address = $("#cmbDeliveryAddress option:selected").text();
+        $('#txtDisplayDeliveryAddress').val(address);
     });
 
     disableOrderDataInputs();
 
 
+    $('#btnSaveAttachment').on('click', function () {
+
+        saveAttachmentViewOrder();
+    });
 
 });
 
@@ -390,13 +429,18 @@ Dropzone.options.myDropzone = {
 
         this.on("sending", function (file, xhr, formData) {
 
+            if (!checkStringLength($('#txtDescription').val(), 500)) {
+                showWarningMessage('Data too long for "Description".')
+                return;
+            }
+
             // Will sendthe filesize along with the file as POST data.
 
             formData.append("foo", $('#txtDescription').val());
 
         });
 
-        this.on("success", function(file, responseText) {
+        this.on("success", function (file, responseText) {
             var responseText = file.id // or however you would point to your assigned file ID here;
             console.log(responseText); // console should show the ID you pointed to
             // do stuff with file.id ...
@@ -408,19 +452,21 @@ Dropzone.options.myDropzone = {
         });
 
         this.on("complete", function (file) {
-            this.removeAllFiles(true);
-            $('#txtDescription').val("");
-            $('#attachmentAddModal').modal('hide');
+
+            if (ACTION != 'view') {
+                this.removeAllFiles(true);
+                $('#txtDescription').val("");
+                $('#attachmentAddModal').modal('hide');
+            }
             allAttachment(UPDATE_ORDER_ID);
             console.log(file);
         });
 
         this.on("errormultiple", function (files, response) {
-          
+
         });
     }
 };
-
 
 
 function allCustomer() {
@@ -441,6 +487,45 @@ function allCustomer() {
             } else {
                 showErrorMessage();
             }
+
+        },
+        error: function (error) {
+            console.log(error);
+
+        },
+
+    });
+}
+
+
+
+
+function customerAllDeliveryAddress(id) {
+    $.ajax({
+        type: "GET",
+        url: "/customerOrder/customerAllDeliveryAddress/" + id,
+        async: false,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 800000,
+        beforeSend: function () {
+
+        },
+        success: function (response) {
+            console.log(response);
+            if (response.data.success) {
+                $('#cmbDeliveryAddress').empty();
+                for (var i = 0; i < response.data.result.length; i++) {
+                    $('#cmbDeliveryAddress').append('<option value="' + response.data.result[i].id + '">' + response.data.result[i].address + '</option>')
+                }
+                var address = $("#cmbDeliveryAddress option:selected").text();
+                $('#txtDisplayDeliveryAddress').val(address);
+            } else {
+                showErrorMessage();
+            }
+
+
 
         },
         error: function (error) {
@@ -497,10 +582,64 @@ function allAttachment(id) {
 
 
 
+function allAttachmentEditViewMode(id) {
+    $.ajax({
+        type: "GET",
+        url: "/customerOrder/allAttachmentEditViewMode/" + id,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 800000,
+        beforeSend: function () {
+
+        },
+        success: function (response) {
+            console.log(response);
+            if (response.data.success) {
+                var result = response.data.result;
+                var data = [];
+                for (var i = 0; i < result.length; i++) {
+                    var path = "'" + result[i].file_path + "'";
+                    var id = "'" + result[i].id + "'";
+                    data.push({
+                        "file": result[i].description,
+                        "view": '<button type= "button" class="btn btn-primary" onclick="viewAttachment(' + path + ');"><i class="fa fa-eye" aria-hidden="true"></i></button> ',
+                        "download": '<button type= "button" class="btn btn-success" onclick="downloadAttachment(' + path + ');"><i class="fa fa-download" aria-hidden="true"></i></button> ',
+                        "delete": '<button type= "button" class="btn btn-danger" onclick="deleteAttachment(' + id + ');"><i class="fa fa-trash" aria-hidden="true"></i></button> ',
+                    });
+                }
+                var table = $('#myTable').DataTable();
+                table.clear();
+                table.rows.add(data).draw();
+            } else {
+                showErrorMessage();
+            }
+
+        },
+        error: function (error) {
+            console.log(error);
+
+        },
+
+    });
+}
+
+
+
+
 function autoCompleteSelectedOption(input, data) {
     if (input.id == "txtName") {
         resetOrderData();
         loadSelectedCustomerdata(data.id);
+        customerAllDeliveryAddress(data.id);
+        if ($('#cmbDeliveryAddress').val() == null) {
+            $('#cmbDeliveryAddress').css('border', '1px solid red');
+            $('#txtDisplayDeliveryAddress').css('border', '1px solid red');
+            showWarningMessage('No delivery address entered for this customer.');
+        } else {
+            $('#cmbDeliveryAddress').css('border', '1px solid #e1e1e1');
+            $('#txtDisplayDeliveryAddress').css('border', '1px solid #e1e1e1');
+        }
     } else if (input.id == "txtProductType") {
         getCustomerOrderData(data.id);
     }
@@ -528,7 +667,7 @@ function loadSelectedCustomerdata(id) {
                 var delivery_address = response.data.result['delivery_address'];
                 var cosignee_details = response.data.result['cosignee_details'];
                 var party_details = response.data.result['party_details'];
-
+                var country = response.data.result['country_id'];
                 var name = response.data.result['customer_name'];
 
 
@@ -536,7 +675,7 @@ function loadSelectedCustomerdata(id) {
                 $('#txtDeliveryAddress').val(delivery_address);
                 $('#txtCosigneeDetails').val(cosignee_details);
                 $('#txtPartyDetails').val(party_details);
-
+                setSelectedOption('cmbCountry', country);
                 $('#txtFillName').val(name);
 
 
@@ -859,10 +998,21 @@ function allWashedLevel() {
 
 function saveOrderData() {
 
+    var id = 0;
+    if (UPDATE_ORDER_ID != undefined) {
+        id = UPDATE_ORDER_ID;
+    }
+
+    if (!checkStringLength($('#txtOrderDataDescription').val(), 500)) {
+        showWarningMessage('Data too long for "Description".');
+        return;
+    }
     var data = {
+        "order_id": id,
         "token": TOKEN,
         "product_type": $('#txtProductType').val(),
         "product_code": $('#txtProductCode').val(),
+        "description": $('#txtOrderDataDescription').val(),
         "product_dimension": $('#txtDimensions').val(),
         "product_mix_name": $('#selcProductMix option:selected').text(),
         "product_mix_id": $('#selcProductMix').val(),
@@ -924,7 +1074,13 @@ function saveOrderData() {
             console.log(response);
             if (response.data.success) {
                 toastr.success('Customer data has been saved successful...!');
-                allOrderDataWithToken(UPDATE_ORDER_ID, TOKEN);
+
+
+                allOrderDataWithToken(UPDATE_ORDER_ID, TOKEN, ACTION);
+
+
+
+
                 resetOrderData();
             } else {
                 toastr.error('Something went wrong');
@@ -983,10 +1139,10 @@ function resetAttachment() {
 
 
 
-function allOrderDataWithToken(id, token) {
+function allOrderDataWithToken(id, token, action) {
     $.ajax({
         type: "GET",
-        url: "/customerOrder/allOrderDataWithToken/" + id + "/" + token,
+        url: "/customerOrder/allOrderDataWithToken/" + id + "/" + token + "/" + action,
         processData: false,
         contentType: false,
         cache: false,
@@ -1028,7 +1184,7 @@ function allOrderDataWithToken(id, token) {
             }
 
             var table = $('#CustomerOrderDataTable').DataTable();
-            //table.clear();
+            table.clear();
             table.rows.add(data).draw();
 
 
@@ -1040,6 +1196,9 @@ function allOrderDataWithToken(id, token) {
 
     });
 }
+
+
+
 
 
 
@@ -1106,6 +1265,30 @@ function allOrderData(id) {
 
 
 function saveCustomerOrder() {
+    if (!checkStringLength($('#txtBillAddress').val(), 500)) {
+        showWarningMessage('Data too long for "Customer Bill To Address".');
+        return;
+    }
+    if (!checkStringLength($('#txtCosigneeDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Consignee Name, Address, Contact".');
+        return;
+    }
+    if (!checkStringLength($('#txtPartyDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Notify Party Name, Address, Contact (If in USA leave blank)".');
+        return;
+    }
+    if (!checkStringLength($('#txtremarksbox').val(), 500)) {
+        showWarningMessage('Data too long for "Remarks".');
+        return;
+    }
+    if ($('#cmbDeliveryAddress').val() == null) {
+        showWarningMessage('Please select Customer Delivery Address & Contact.');
+        return;
+    }
+    if (isDuplicateFactoryPO($('#txtFactoryPo').val())) {
+        showWarningMessage('Duplicate Factory PO number');
+        return;
+    }
     var data = {
         "token": TOKEN,
         "customer_id": $('#txtName').attr('data-id'),
@@ -1114,7 +1297,8 @@ function saveCustomerOrder() {
         "factory_po_num": $('#txtFactoryPo').val(),
         "invoice_num": $('#txtInvoiceNumber').val(),
         "bill_address": $('#txtBillAddress').val(),
-        "delivery_address": $('#txtDeliveryAddress').val(),
+        "delivery_address": "",
+        "delivery_address_id": $('#cmbDeliveryAddress').val(),
         "cosignee_details": $('#txtCosigneeDetails').val(),
         "party_details": $('#txtPartyDetails').val(),
         "country_id": $('#cmbCountry').val(),
@@ -1137,6 +1321,7 @@ function saveCustomerOrder() {
         },
         timeout: 800000,
         beforeSend: function () {
+            $('#btnSaveOrder').prop("disabled", true);
         },
         success: function (response) {
             console.log(response);
@@ -1158,6 +1343,7 @@ function saveCustomerOrder() {
             toastr.error('Something went wrong');
         },
         complete: function () {
+            $('#btnSaveOrder').prop("disabled", false);
         }
 
     });
@@ -1229,8 +1415,11 @@ function deleteOrderData(id) {
         success: function (response) {
             console.log(response);
             if (response.data.success) {
-                showSuccessMessage("Order Data has been deleted successfully...")
-                allOrderData(UPDATE_ORDER_ID);
+                showSuccessMessage("Order Data has been deleted successfully...");
+
+                allOrderDataWithToken(UPDATE_ORDER_ID, TOKEN, ACTION);
+                //allOrderData(UPDATE_ORDER_ID);
+
             } else {
                 showErrorMessage();
             }
@@ -1298,6 +1487,7 @@ function setOrderData(data) {
 
     $('#txtProductType').val(data.product_type);
     $('#txtProductCode').val(data.product_code);
+    $('#txtOrderDataDescription').val(data.description);
     $('#txtDimensions').val(data.product_dimensions);
     setSelectedOption('selcProductMix', data.product_mix_id)
     $('#vegetableCheck').attr('checked', data.vegetableCheck);
@@ -1308,19 +1498,59 @@ function setOrderData(data) {
     setSelectedOption('selcWashedLevel', data.washed_level_id);
     setSelectedOption('selcSlabPosition', data.slab_position);
     $('#txtDripperHoles').val(data.no_of_dripper);
+    if (data.no_of_dripper == null) {
+        $('#txtDripperHoles').val(0);
+    }
     $('#txtDrainHoles').val(data.no_of_drain);
+    if (data.no_of_drain == null) {
+        $('#txtDrainHoles').val(0);
+    }
     setSelectedOption('txtDrainHolesSize', data.drain_holes_size);
     setSelectedOption('txtDrainHolesShape', data.drain_holes_shape);
+
     $('#txtDugHoles').val(data.no_of_dug);
+    if (data.no_of_dug == null) {
+        $('#txtDugHoles').val(0);
+    }
+
     $('#txtDugHolesSize').val(data.dug_holes_size);
+    if (data.dug_holes_size == null) {
+        $('#txtDugHolesSize').val(0);
+    }
+
+
     $('#txtPlantHoles').val(data.no_of_plant);
+    if (data.no_of_plant == null) {
+        $('#txtPlantHoles').val(0);
+    }
     $('#txtPlantHolesSize').val(data.plant_holes_size);
+    if (data.plant_holes_size == null) {
+        $('#txtPlantHolesSize').val(0);
+    }
+
     setSelectedOption('selcPlantHoles', data.standing_Lying);
     setSelectedOption('selcPallet', data.pallet);
+
     $('#txtPcsPerBoxes').val(data.pcs_per_boxes);
+    if (data.pcs_per_boxes == null) {
+        $('#txtPcsPerBoxes').val(0);
+    }
+
     $('#txtBoxesPallet').val(data.boxes_pallet);
+    if (data.boxes_pallet == null) {
+        $('#txtBoxesPallet').val(0);
+    }
+
     $('#txtBoxesMasterCartoon').val(data.boxes_master_cartoon);
+    if (data.boxes_master_cartoon == null) {
+        $('#txtBoxesMasterCartoon').val(0);
+    }
+
     $('#txtMasterCartoonPallets').val(data.master_cartoon_pallets);
+    if (data.master_cartoon_pallets == null) {
+        $('#txtMasterCartoonPallets').val(0);
+    }
+
     $('#txtQtyPieces').val(data.quantity_pieces);
 
 
@@ -1336,10 +1566,14 @@ function setOrderData(data) {
 
 
 function updateOrderData() {
-
+    if (!checkStringLength($('#txtOrderDataDescription').val(), 500)) {
+        showWarningMessage('Data too long for "Description".');
+        return;
+    }
     var data = {
         "product_type": $('#txtProductType').val(),
         "product_code": $('#txtProductCode').val(),
+        "description": $('#txtOrderDataDescription').val(),
         "product_dimension": $('#txtDimensions').val(),
         "product_mix_name": $('#selcProductMix option:selected').text(),
         "product_mix_id": $('#selcProductMix').val(),
@@ -1437,7 +1671,7 @@ function getCustomerMainOrder(id) {
             console.log(response);
             if (response.data.success) {
                 setCustomerMainOrder(response.data.result);
-                allAttachment(id);
+                allAttachmentEditViewMode(id);
 
             } else {
                 showErrorMessage();
@@ -1458,16 +1692,19 @@ function getCustomerMainOrder(id) {
 
 function setCustomerMainOrder(data) {
     CUSTOMER_ID = data.customer_id;
+    customerAllDeliveryAddress(data.customer_id);
+    setSelectedOption('cmbDeliveryAddress', data.delivery_address_id);
+    $('#txtDeliveryAddress').val($('#cmbDeliveryAddress option:selected').text());
     $('#txtName').attr('data-id', data.customer_id);
     $('#txtName').val(data.customer_name);
     $('#txtPurchase').val(data.purchase_order);
     $('#txtFactoryPo').val(data.factory_po_num);
     $('#txtInvoiceNumber').val(data.invoice_num);
     $('#txtBillAddress').val(data.bill_address);
-    $('#txtDeliveryAddress').val(data.delivery_address);
+    //$('#txtDeliveryAddress').val(data.delivery_address);
     $('#txtCosigneeDetails').val(data.cosignee_details);
     $('#txtPartyDetails').val(data.party_details);
-    setSelectedOption('cmbCountry', data.country_id)
+    setSelectedOption('cmbCountry', data.country_id);
     $('#dteDate').val(data.date);
     $('#dteDeliveryDate').val(data.delivery_date);
     setSelectedOption('selcShippingTerms', data.shipping_term_id);
@@ -1481,6 +1718,26 @@ function setCustomerMainOrder(data) {
 
 
 function updateCustomerOrder() {
+    if (!checkStringLength($('#txtBillAddress').val(), 500)) {
+        showWarningMessage('Data too long for "Customer Bill To Address".');
+        return;
+    }
+    if (!checkStringLength($('#txtCosigneeDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Consignee Name, Address, Contact".');
+        return;
+    }
+    if (!checkStringLength($('#txtPartyDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Notify Party Name, Address, Contact (If in USA leave blank)".');
+        return;
+    }
+    if (!checkStringLength($('#txtremarksbox').val(), 500)) {
+        showWarningMessage('Data too long for "Remarks".');
+        return;
+    }
+    if ($('#cmbDeliveryAddress').val() == null) {
+        showWarningMessage('Please select Customer Delivery Address & Contact.');
+        return;
+    }
     var data = {
         "token": TOKEN,
         "customer_id": $('#txtName').attr('data-id'),
@@ -1489,7 +1746,8 @@ function updateCustomerOrder() {
         "factory_po_num": $('#txtFactoryPo').val(),
         "invoice_num": $('#txtInvoiceNumber').val(),
         "bill_address": $('#txtBillAddress').val(),
-        "delivery_address": $('#txtDeliveryAddress').val(),
+        "delivery_address": "",
+        "delivery_address_id": $('#cmbDeliveryAddress').val(),
         "cosignee_details": $('#txtCosigneeDetails').val(),
         "party_details": $('#txtPartyDetails').val(),
         "country_id": $('#cmbCountry').val(),
@@ -1512,12 +1770,13 @@ function updateCustomerOrder() {
         },
         timeout: 800000,
         beforeSend: function () {
+            $('#btnSaveOrder').prop("disabled", true);
         },
         success: function (response) {
             console.log(response);
             if (response.data.success) {
                 toastr.success('Customer data has been saved successful...!');
-                allOrderData();
+                //allOrderData();
                 resetOrderData();
                 $('#orderForm').trigger('reset');
                 location.href = "/orderList";
@@ -1532,6 +1791,7 @@ function updateCustomerOrder() {
             toastr.error('Something went wrong');
         },
         complete: function () {
+            $('#btnSaveOrder').prop("disabled", false);
         }
 
     });
@@ -1540,7 +1800,7 @@ function updateCustomerOrder() {
 
 
 function viewAttachment(file) {
-    window.open('/order/' + file);
+    window.open(file);
 
 }
 
@@ -1548,7 +1808,7 @@ function viewAttachment(file) {
 function downloadAttachment(file) {
     var link = document.createElement("a");
     link.download = file;
-    link.href = "/order/" + file;
+    link.href = file;
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
@@ -1593,9 +1853,10 @@ function deleteAttachment(id) {
 
 function checkOrderStatus(id) {
 
-    /*$.ajax({
+
+    $.ajax({
         type: "GET",
-        url: "/pp/customerOrder/checkOrderStatus/" + id,
+        url: "/customerOrder/checkOrderStatus/" + id,
         processData: false,
         contentType: false,
         cache: false,
@@ -1605,14 +1866,28 @@ function checkOrderStatus(id) {
         },
         success: function (response) {
             console.log(response);
-            if (response.data.result == 1) {
-                $('#thradArea').show();
-                $('#btnSubmitThread').attr('onclick', 'submitThread(' + id + ')')
+            var status = response.data.result;
+            if (status == 1) {
                 $('#actionArea').hide();
-                loadCustomerOrderThread(id);
+                $('#btnAttachment').hide();
+                $('#btnAddOrderDataModel').hide();
+                var table = $('#CustomerOrderDataTable').DataTable();
+                table.column(33).visible(false);
+                table.column(35).visible(false);
+            } else if (status == 3) {
+                $('#actionArea').hide();
+                $('#btnAttachment').hide();
+                $('#btnAddOrderDataModel').hide();
+                var table = $('#CustomerOrderDataTable').DataTable();
+                table.column(33).visible(false);
+                table.column(35).visible(false);
             } else {
-                $('#thradArea').hide();
                 $('#actionArea').show();
+                $('#btnAttachment').show();
+                $('#btnAddOrderDataModel').show();
+                var table = $('#CustomerOrderDataTable').DataTable();
+                table.column(33).visible(true);
+                table.column(35).visible(true);
             }
 
         },
@@ -1623,11 +1898,11 @@ function checkOrderStatus(id) {
         complete: function () {
             progress(false);
         }
-    });*/
+    });
 
 
-    $('#btnSubmitThread').attr('onclick', 'submitThread(' + id + ')')
-    loadCustomerOrderThread(id);
+
+
 }
 
 
@@ -1635,10 +1910,88 @@ function checkOrderStatus(id) {
 
 
 
+function checkStringLength(string, maxLength) {
+
+    if (string.length > maxLength) {
+        return false;
+    }
+    return true;
+
+}
 
 
 
 
+
+function isDuplicateFactoryPO(id) {
+
+    var bool = false;
+    $.ajax({
+        type: "GET",
+        url: "/customerOrder/isDuplicateFactoryPO/" + id,
+        async: false,
+        processData: false,
+        contentType: false,
+        cache: false,
+        timeout: 800000,
+        beforeSend: function () {
+
+        },
+        success: function (response) {
+            console.log(response);
+            bool = response.data.result;
+
+        },
+        error: function (error) {
+            console.log(error);
+
+        },
+        complete: function () {
+        }
+    });
+
+
+    return bool;
+}
+
+
+
+function saveAttachmentViewOrder() {
+    $.ajax({
+        type: "POST",
+        url: '/customerOrder/saveAttachmentViewOrder',
+        data: {
+            'purchase_order': $('#txtFactoryPo').val(),
+            'token': TOKEN,
+            'order_id': UPDATE_ORDER_ID
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        timeout: 800000,
+        beforeSend: function () {
+        },
+        success: function (response) {
+            console.log(response);
+            if (response.data.success) {
+                toastr.success('Attachment has been saved successful...!');
+                $('#txtDescription').val("");
+                $('#attachmentAddModal').modal('hide');
+            } else {
+                toastr.error('Something went wrong');
+            }
+
+
+        },
+        error: function (error) {
+            console.log(error);
+            toastr.error('Something went wrong');
+        },
+        complete: function () {
+        }
+
+    });
+}
 
 
 

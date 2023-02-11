@@ -2,7 +2,10 @@
 
 namespace App\Http\Controllers;
 
+use App\Mail\MailData;
+use App\Models\CustomerOrder;
 use App\Models\CustomerOrderThread;
+use App\Models\Email;
 use App\Models\Employee;
 use Illuminate\Contracts\Support\Renderable;
 use Illuminate\Http\Request;
@@ -27,8 +30,20 @@ class CustomerOrderThreadController extends Controller
             $customer_order_thread->order_id = $order_id;
             $customer_order_thread->user_id = $user_id;
             $customer_order_thread->user_name = Auth::user()->name;
+            $customer_order_thread->user_type = Auth::user()->user_type;
             $customer_order_thread->text = $text;
+
             if ($customer_order_thread->save()) {
+                $recievers = MailData::getRecievers();
+                foreach ($recievers as $address) {
+                    $order = CustomerOrder::find($order_id);
+                    $subject = "PO No : " . $order->purchase_order;
+                    $email_body = "PO No : " . $order->purchase_order;
+                    $email_body .= "<br> Message : " . $text;
+                    if ($order) {
+                        MailController::createMail($subject,$email_body, MailData::getSender(), $address);
+                    }
+                }
                 $responseBody = $this->responseBody(true, "CustomerOrderThreadController", "submit", true);
             } else {
                 $responseBody = $this->responseBody(false, "CustomerOrderThreadController", "submit", false);
@@ -45,14 +60,14 @@ class CustomerOrderThreadController extends Controller
         try {
             $customer_order_threads = CustomerOrderThread::where('order_id', '=', $order_id)->get();
             foreach ($customer_order_threads as $thread) {
-                $data = '';
-                $img = '/images/employee.jpg';
+                $data = $thread->created_at . " - " . $thread->user_type;
+                $img = 'https://erp.rbs.lk/images/employee.jpg';
                 if ($thread->user_name == 'admin') {
-                    $data = $thread->created_at . " - Admin";
+                    $data = $thread->created_at . " - Admin - " . $thread->user_type;
                 }
                 $employee = Employee::find($thread->user_id);
                 if ($employee) {
-                    $data = $thread->created_at . " - ".$employee->name_withinitial;
+                    $data = $thread->created_at . " - " . $employee->name_withinitial . " - " . $thread->user_type;
                     $img = $employee->photo_parth;
                 }
                 $thread->data = $data;

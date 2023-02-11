@@ -770,6 +770,18 @@
                                         @endif href="/orderList">List</a>
                                 </li>
                                 <li>
+                                    <a @if(request()->segment(2) == 'customer_order_accept_list') class="active"
+                                        @endif href="/customer_order_accept_list">Order Status List</a>
+                                </li>
+                                <li>
+                                    <a @if(request()->segment(2) == 'order_cancel') class="active"
+                                        @endif href="/order_cancel">Order Cancel</a>
+                                </li>
+                                <li>
+                                    <a @if(request()->segment(2) == 'order_cancel_list') class="active"
+                                        @endif href="/order_cancel_list">Order Cancel List</a>
+                                </li>
+                                <li>
                                     <a @if(request()->segment(2) == 'orderSettings') class="active"
                                         @endif href="/orderSettings">Setting</a>
                                 </li>

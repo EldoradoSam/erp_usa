@@ -216,41 +216,40 @@
                     </div>
 
 
-                   <!-- <div class="col-md-12 mb-3">
+                    <div class="col-md-12 mb-3">
                         <div class="card">
-                            <div class="card-header" id="headingProductSize">
+                            <div class="card-header" id="reason">
                                 <h5 class="mb-0">
-                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseProductSize" aria-expanded="false" aria-controls="collapseProductSize" onclick="getSettings('ProductSize')">
-                                        <i class="ti-settings mr-2"></i> Product Size
+                                    <button class="btn btn-link" type="button" data-toggle="collapse" data-target="#collapseReason" aria-expanded="false" aria-controls="collapseReason" onclick="getSettings('Reason')">
+                                        <i class="ti-settings mr-2"></i> Reason
                                     </button>
                                 </h5>
                             </div>
-                            <div id="collapseProductSize" class="collapse" aria-labelledby="headingProductSize" data-parent="#accordionExample">
+                            <div id="collapseReason" class="collapse" aria-labelledby="reason" data-parent="#accordionExample">
                                 <div class="card-body">
                                     <div>
-                                        <button type="button" class="btn btn-primary" data-target="#settingsAddModal" data-whatever="@getbootstrap" name="save" onclick="showModal('save','ProductSize')">
+                                        <button type="button" class="btn btn-primary" data-target="#settingsAddModal" data-whatever="@getbootstrap" name="save" onclick="showModal('save','Reason')">
                                             <i class="fa fa-plus" aria-hidden="true"></i>
                                         </button>
                                     </div>
                                     <div class="table-responsive">
-                                        Required for Responsive 
                                         <table class="table table-striped table-responsive-stack">
                                             <thead>
                                                 <tr>
                                                     <th class="id">ID#</th>
-                                                    <th>Size</th>
+                                                    <th>Reason</th>
                                                     <th class="edit">Edit</th>
                                                     <th class="edit">Delete</th>
                                                     <th class="disable">Status</th>
                                                 </tr>
                                             </thead>
-                                            <tbody id="tblProductSize"></tbody>
+                                            <tbody id="tblReason"></tbody>
                                         </table>
                                     </div>
                                 </div>
                             </div>
                         </div>
-                    </div>!-->
+                    </div>
 
                     <div class="col-md-12 mb-3">
                         <!--<div class="card">
@@ -288,46 +287,46 @@
                     </div>
 
 
-    <div class="modal fade" id="settingsAddModal" tabindex="-1" role="dialog" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered" role="document">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="settingsAddModalTitle">Modal title</h5>
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
-                        <i class="ti-close"></i>
-                    </button>
-                </div>
-                <form method="POST" id="myForm">
-                    {{csrf_field()}}
-                    <input type="hidden" id="settingID" name="settingID" value>
-                    <div class="modal-body" id="settingsAddModalBody">
-                        <div class="form-row">
-                            <div class="col-md-12 mb-3">
-                                <label for="txtName">Name</label>
-                                <input type="text" class="form-control" id="txtSettingName" name="txtSettingName" placeholder="Name" required="">
+                    <div class="modal fade" id="settingsAddModal" tabindex="-1" role="dialog" aria-hidden="true">
+                        <div class="modal-dialog modal-dialog-centered" role="document">
+                            <div class="modal-content">
+                                <div class="modal-header">
+                                    <h5 class="modal-title" id="settingsAddModalTitle">Modal title</h5>
+                                    <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                        <i class="ti-close"></i>
+                                    </button>
+                                </div>
+                                <form method="POST" id="myForm">
+                                    {{csrf_field()}}
+                                    <input type="hidden" id="settingID" name="settingID" value>
+                                    <div class="modal-body" id="settingsAddModalBody">
+                                        <div class="form-row">
+                                            <div class="col-md-12 mb-3">
+                                                <label for="txtName" id="lblNameModal">Name</label>
+                                                <input type="text" class="form-control" id="txtSettingName" name="txtSettingName" placeholder="Name" required="">
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close
+                                        </button>
+                                        <button type="button" class="btn btn-primary" id="btnSetting">Save</button>
+                                    </div>
+                                </form>
                             </div>
                         </div>
                     </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-danger" data-dismiss="modal">Close
-                        </button>
-                        <button type="button" class="btn btn-primary" id="btnSetting">Save</button>
-                    </div>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+                </div>
 
 
-@endsection
+                @endsection
 
-<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
-@section('script')
-<!-- App scripts -->
-<script src="{{ url('assets/js/settings.js') }}?random=<?php echo uniqid(); ?>"></script>
-<!-- Sweet alert -->
-<script src="{{ url('assets/js/examples/sweet-alert.js') }}"></script>
-<!-- Prism -->
-<script src="{{ url('vendors/prism/prism.js') }}"></script>
-@endsection
+                <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+                @section('script')
+                <!-- App scripts -->
+                <script src="{{ url('assets/js/settings.js') }}?random=<?php echo uniqid(); ?>"></script>
+                <!-- Sweet alert -->
+                <script src="{{ url('assets/js/examples/sweet-alert.js') }}"></script>
+                <!-- Prism -->
+                <script src="{{ url('vendors/prism/prism.js') }}"></script>
+                @endsection

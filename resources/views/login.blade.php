@@ -54,7 +54,7 @@
                                                                                     <label for="form-field-email" class="elementor-field-label elementor-screen-only">Email</label><input size="1" type="email" name="email" id="form-field-email" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Email" required aria-required="true">
                                                                                 </div>
                                                                                 <div class="elementor-field-type-password elementor-field-group elementor-column elementor-field-group-name elementor-col-100">
-                                                                                    <label for="form-field-name" class="elementor-field-label elementor-screen-only">Password</label><input size="1" type="password" name="password" id="form-field-name" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Password" value="admin@R8$R10">
+                                                                                    <label for="form-field-name" class="elementor-field-label elementor-screen-only">Password</label><input size="1" type="password" name="password" id="form-field-name" class="elementor-field elementor-size-sm  elementor-field-textual" placeholder="Password" value="admin@Rbs7$R5">
                                                                                 </div>
                                                                                 <!-- <div class="elementor-field-type-checkbox elementor-field-group elementor-column elementor-field-group-field_360e747 elementor-col-100">
                                                                                     <label for="form-field-field_360e747" class="elementor-field-label elementor-screen-only">Remember Me</label>
@@ -87,9 +87,7 @@
                                                                 <div class="elementor-element elementor-element-248eec4 elementor-widget elementor-widget-text-editor" data-id="248eec4" data-element_type="widget" data-widget_type="text-editor.default">
                                                                     <div class="elementor-widget-container">
                                                                         <div class="elementor-text-editor elementor-clearfix">
-                                                                            <p>
-                                                                                Happy New Year 2021
-                                                                            </p>
+                                                                           
                                                                         </div>
                                                                     </div>
                                                                 </div>

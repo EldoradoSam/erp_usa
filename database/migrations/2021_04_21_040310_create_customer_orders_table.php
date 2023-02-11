@@ -20,10 +20,11 @@ class CreateCustomerOrdersTable extends Migration
             $table->string('purchase_order',200);
             $table->string('factory_po_num',200);
             $table->string('invoice_num',200);
-            $table->string('bill_address',200);
-            $table->string('delivery_address',200);
-            $table->string('cosignee_details',200);
-            $table->string('party_details',200);
+            $table->string('bill_address',500);
+            $table->string('delivery_address',500);
+            $table->integer('delivery_address_id');
+            $table->string('cosignee_details',500);
+            $table->string('party_details',500);
             $table->date('date');
             $table->foreignId('country_id');
             $table->date('delivery_date');
@@ -32,6 +33,11 @@ class CreateCustomerOrdersTable extends Migration
             $table->string('remarks')->nullable();
             $table->boolean('production_status')->nullable();
             $table->boolean('status');
+            $table->integer('order_status');
+            $table->integer('fund_status');
+            $table->integer('created_by');
+            $table->integer('updated_by');
+            $table->string('create_from',45);
             $table->timestamps();
         });
     }

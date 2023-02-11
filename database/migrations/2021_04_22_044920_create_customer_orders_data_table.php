@@ -50,6 +50,7 @@ class CreateCustomerOrdersDataTable extends Migration
             $table->string('boxes_master_cartoon',50);
             $table->string('master_cartoon_pallets',50);
             $table->string('quantity_pieces',200);
+            $table->string('description',500);
             $table->integer('token');
             $table->timestamps();
         });

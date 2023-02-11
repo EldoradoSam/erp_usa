@@ -17,7 +17,7 @@ function progress(bool) {
         overlay.style.justifyContent = 'center';
 
         var progress = document.createElement('IMG');
-        progress.src = 'https://www.dariusland.com/images/load.gif';
+        progress.src = 'https://i.stack.imgur.com/kOnzy.gif';
         progress.style.width = '100px';
         progress.style.height = '100px';
         progress.style.margin = 'auto';

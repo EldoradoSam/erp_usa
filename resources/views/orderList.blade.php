@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="{{ url('vendors/prism/prism.css') }}" type="text/css">
 <link rel="stylesheet" href="{{ url('assets/css/settings.css') }}" media="all" type="text/css" />
 
-
+<meta name="csrf-token" content="{{ csrf_token() }}">
 <script>
     var user_type = "{{ Auth::user()->user_type }}";
 </script>
@@ -44,7 +44,9 @@
                             <th class="factory_po_num">Factory PO number</th>
                             <th class="customer_po_num">Customer PO number</th>
                             <th>Customer Name</th>
-                            <th class="status">Order Status</th>
+                            <th class="production_status">Production Status</th>
+                            <th class="order_status">Order Status</th>
+                            <th class="fund_status">Fund Status</th>
                             <th class="disable">Status</th>
                             <th class="edit">Edit</th>
                             <th class="view">View</th>
@@ -65,7 +67,7 @@
 <!-- DataTable -->
 <script src="{{ url('vendors/dataTable/datatables.min.js') }}"></script>
 <script src="{{ url('assets/js/examples/datatable.js') }}"></script>
-<script src="{{ url('assets/js/customer_order_list.js') }}"></script>
+<script src="{{ url('assets/js/customer_order_list.js') }}?random=<?php echo uniqid(); ?>"></script>
 
 <!-- Prism -->
 <script src="{{ url('vendors/prism/prism.js') }}"></script>

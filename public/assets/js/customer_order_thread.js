@@ -1,12 +1,16 @@
 $(document).ready(function () {
 
-    alert();
 });
 
 
 function submitThread(order_id) {
 
-    if($('#txtOrderThread').val() == ''){
+    if ($('#txtOrderThread').val().trim().length == 0) {
+        showWarningMessage('Please enter message.');
+        return;
+    }
+    if (!checkStringLength($('#txtOrderThread').val(), 500)) {
+        showWarningMessage('Data too long for "Message".');
         return;
     }
     $.ajax({
@@ -62,7 +66,7 @@ function loadCustomerOrderThread(order_id) {
             console.log(response);
             $('#threadParent').empty();
             for (var i = 0; i < response.data.result.length; i++) {
-                var section = loadSection(response.data.result[i].text,response.data.result[i].img, response.data.result[i].data);
+                var section = loadSection(response.data.result[i].text, response.data.result[i].img, response.data.result[i].data);
                 $('#threadParent').append(section);
             }
 
@@ -97,4 +101,43 @@ function loadSection(text, img, data) {
     section += '</div>';
     section += '</div>';
     return section;
+}
+
+function checkStringLength(string, maxLength) {
+
+    if (string.length > maxLength) {
+        return false;
+    }
+    return true;
+
+}
+
+/**
+* showSuccessMessage
+* This function is used to show success message.
+* @param message This is the paramter to require message content
+*/
+function showSuccessMessage(message) {
+    toastr.success(message);
+}
+
+
+/**
+* showWarningMessage
+* This function is used to show warning message.
+* @param message This is the paramter to require message content
+*/
+function showWarningMessage(message) {
+    toastr.warning(message);
+}
+
+
+
+/**
+* showErrorMessage
+* This function is used to show error message.
+* @param message This is the paramter to require message content
+*/
+function showErrorMessage() {
+    toastr.error('Something went wrong');
 }

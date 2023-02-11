@@ -1,6 +1,6 @@
 console.log('gn_customer.js loading')
 
-var customerid;
+var customerid = undefined;
 
 $(document).ready(function () {
     $('#myTable').DataTable({
@@ -27,23 +27,81 @@ $(document).ready(function () {
         ],
     });
 
-    /*$('#btnSaveCustomer').on('click', function (event) {
-        event.preventDefault();
-        var form = $('#customerForm').get(0);
-        var data = new FormData(form);
-        console.log(data);
+    $('#deliveryContactTable').DataTable({
+        responsive: true,
+        "order": [],
+        "columns": [
+            { "data": "address" },
+            { "data": "contact" },
+            { "data": "edit" },
+            { "data": "delete" },
+        ],
+        columnDefs: [
+            { width: 30, targets: 2 },
+            { width: 30, targets: 3 },
+        ],
+    });
 
-        if ($('#btnSaveCustomer').text() == "Save") {
-            Save(data);
-        } else if ($('#btnSaveCustomer').text() == "Update") {
-
-        }
-    });*/
 
     LoadCountry();
     LoadGLPostData();
     loadcustomers();
-    // setcustomerId();
+
+
+    $('#btncontactsmodal').on('click', function () {
+
+        if (customerid == undefined) {
+            showWarningMessage('Please save the data in "General" tab first ');
+            return;
+        }
+        $('#contactsmodal').modal('show');
+
+    });
+
+    $('#btnDeliveryContactsmodal').on('click', function () {
+        if (customerid == undefined) {
+            showWarningMessage('Please save the data in "General" tab first ');
+            return;
+        }
+        $('#btnSaveDeliveryContact').text('Save');
+        $('#deliveryContactsModal').modal('show');
+
+    });
+
+    $('#btnSaveCustomer').on('click', function (event) {
+        event.preventDefault();
+        var form = $('#customerForm').get(0);
+        var data = new FormData(form);
+
+        if ($('#btnSaveCustomer').text() == "Save") {
+            Save(data);
+        } else if ($('#btnSaveCustomer').text() == "Update") {
+            updateCustomer(data);
+        }
+    });
+
+
+    $('#btnSaveContact').on('click', function () {
+        if ($('#btnSaveContact').text() == 'update') {
+            var form = $('#contactfrm').get(0);
+            var data = new FormData(form);
+            updatecontacts(data);
+        } else {
+            var form = $('#contactfrm').get(0);
+            var data = new FormData(form);
+            savecontacts(data);
+        }
+    });
+
+    $('#btnSaveDeliveryContact').on('click', function () {
+        if ($('#btnSaveDeliveryContact').text() == 'Save') {
+            saveCustomerDelivery();
+        } else {
+            updateCustomerDelivery();
+        }
+
+
+    });
 
 
 })
@@ -80,19 +138,41 @@ function setcustomerId() {
     }
 
 }
-$('#btnSaveCustomer').on('click', function (event) {
-    event.preventDefault();
-    var form = $('#customerForm').get(0);
-    var data = new FormData(form);
-    console.log(data);
 
-    if ($('#btnSaveCustomer').text() == "Save") {
-        Save(data);
-    } else if ($('#btnSaveCustomer').text() == "Update") {
-        updateCustomer(data);
-    }
-});
 function Save(data) {
+
+    if ($('#txtCustomerName').val().trim().length == 0) {
+        showWarningMessage('Please Enter Customer name.');
+        return;
+    }
+    if ($('#txtAddress').val().trim().length == 0) {
+        showWarningMessage('Please Enter "Customer Bill To Address".');
+        return;
+    }
+    if ($('#txtCosigneeDetails').val().trim().length == 0) {
+        showWarningMessage('Please Enter "Consignee Name, Address, Contact".');
+        return;
+    }
+    if ($('#txtPartyDetails').val().trim().length == 0) {
+        showWarningMessage('Please Enter "Notify Party Name, Address, Contact (If in USA leave blank)".');
+        return;
+    }
+    if (!checkStringLength($('#txtAddress').val(), 500)) {
+        showWarningMessage('Data too long for "Customer Bill To Address".');
+        return;
+    }
+    if (!checkStringLength($('#txtCosigneeDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Consignee Name, Address, Contact".');
+        return;
+    }
+    if (!checkStringLength($('#txtPartyDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Notify Party Name, Address, Contact (If in USA leave blank)".');
+        return;
+    }
+    if (!checkStringLength($('#textNotes').val(), 500)) {
+        showWarningMessage('Data too long for "Note".');
+        return;
+    }
     $.ajax({
         type: 'POST',
         enctype: 'multipart/form-data',
@@ -105,6 +185,8 @@ function Save(data) {
         success: function (response) {
             console.log(response);
             if (response.data.success) {
+                customerid = response.data.result;
+                $('#hidecustomerId').val(customerid);
                 Reset();
                 toastr.success('Record Added Successfully!!!');
             }
@@ -176,26 +258,18 @@ function Reset() {
     $('#checkSMSAlert').prop('checked', false);
     $('#checkEmailAlert').prop('checked', false);
 }
-$('#btncontactsmodal').on('click', function () {
 
-    $('#contactsmodal').modal('show');
-
-});
-$('#btnSaveContact').on('click', function () {
-    if ($('#btnSaveContact').text() == 'update') {
-        var form = $('#contactfrm').get(0);
-        var data = new FormData(form);
-        updatecontacts(data);
-    } else {
-        var form = $('#contactfrm').get(0);
-        var data = new FormData(form);
-        savecontacts(data);
-    }
-});
 function savecontacts(data) {
+    if ($('#txtDesignation').val().trim().length == 0) {
+        showWarningMessage('Please enter designation.');
+        return;
+    }
+    if ($('#txtEmail').val().trim().length == 0) {
+        showWarningMessage('Please enter email.');
+        return;
+    }
     $.ajax({
         type: 'POST',
-        enctype: 'multipart/form-data',
         url: '/Customer/savecontacts',
         data: data,
         processData: false,
@@ -207,8 +281,7 @@ function savecontacts(data) {
             if (response.data.success) {
 
                 $('#contactsmodal').modal('hide');
-
-                loadcontacts(customerid);
+                loadcontacts($('#hidecustomerId').val());
 
                 toastr.success('Record Added Successfully!!!');
 
@@ -347,6 +420,7 @@ function loadcustomers() {
         }
 
         var id = param[0];
+        customerid = id;
         console.log(id);
         $('#hideProductId').val(id);
         $.ajax({
@@ -365,7 +439,7 @@ function loadcustomers() {
                 $('#txtCustomerId').val(result.customer_id);
                 $('#txtCustomerName').val(result.customer_name);
                 $('#txtAddress').val(result.address);
-                $('#txtDeliveryAddress').val(result.delivery_address);
+                //$('#txtDeliveryAddress').val(result.delivery_address);
                 $('#txtCosigneeDetails').val(result.cosignee_details);
                 $('#txtPartyDetails').val(result.party_details);
                 $('#txtWebAddress').val(result.web);
@@ -377,12 +451,45 @@ function loadcustomers() {
                 $('#btnSaveCustomer').text('Update');
 
                 loadcontacts(result.customer_id);
-                loadAttachment(result.customer_id);
-          }
+                loadCustomerDeliveryData(result.customer_id);
+                //loadAttachment(result.customer_id);
+            }
         });
     }
 }
 function updateCustomer(data) {
+    if ($('#txtCustomerName').val().trim().length == 0) {
+        showWarningMessage('Please Enter Customer name.');
+        return;
+    }
+    if ($('#txtAddress').val().trim().length == 0) {
+        showWarningMessage('Please Enter "Customer Bill To Address".');
+        return;
+    }
+    if ($('#txtCosigneeDetails').val().trim().length == 0) {
+        showWarningMessage('Please Enter "Consignee Name, Address, Contact".');
+        return;
+    }
+    if ($('#txtPartyDetails').val().trim().length == 0) {
+        showWarningMessage('Please Enter "Notify Party Name, Address, Contact (If in USA leave blank)".');
+        return;
+    }
+    if (!checkStringLength($('#txtAddress').val(), 500)) {
+        showWarningMessage('Data too long for "Customer Bill To Address".');
+        return;
+    }
+    if (!checkStringLength($('#txtCosigneeDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Consignee Name, Address, Contact".');
+        return;
+    }
+    if (!checkStringLength($('#txtPartyDetails').val(), 500)) {
+        showWarningMessage('Data too long for "Notify Party Name, Address, Contact (If in USA leave blank)".');
+        return;
+    }
+    if (!checkStringLength($('#textNotes').val(), 500)) {
+        showWarningMessage('Data too long for "Note".');
+        return;
+    }
 
     $.ajax({
         type: 'POST',
@@ -397,13 +504,14 @@ function updateCustomer(data) {
             console.log(response);
             if (response.data.success) {
                 Reset();
-                toastr.success('Record Updated Successfully!!!');
+                toastr.success('Record updated Successfully!!!');
             }
         }, error: function (data) {
+            showErrorMessage('Something went wrong!');
             console.log('Something went wrong!');
         },
         complete: function () {
-            location.href = "/customerList";
+            location.href = '/customerList';
         }
     });
 }
@@ -507,6 +615,222 @@ function attachmentDelete(attachment_id) {
 }
 
 
+function saveCustomerDelivery() {
+
+    if ($('#txtDeliveryAddress').val().trim().length == 0) {
+        showWarningMessage('Please Enter Delivery address.');
+        return;
+    }
+    if ($('#txtDeliveryContact').val().trim().length == 0) {
+        showWarningMessage('Please Enter Contact Number.');
+        return;
+    }
+    if (!checkStringLength($('#txtDeliveryAddress').val(), 500)) {
+        showWarningMessage('Data too long for "Address".');
+        return;
+    }
+    $.ajax({
+        type: "POST",
+        url: '/Customer/saveCustomerDelivery',
+        data: {
+            "customer_id": customerid,
+            "address": $('#txtDeliveryAddress').val(),
+            "contact_no": $('#txtDeliveryContact').val(),
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        timeout: 800000,
+        beforeSend: function () {
+        },
+        success: function (response) {
+            console.log(response);
+            if (response.data.success) {
+                showSuccessMessage('Customer delivery data has been saved successful...!');
+                $('#txtDeliveryAddress').val('');
+                $('#txtDeliveryContact').val('');
+                $('#deliveryContactsModal').modal('hide');
+                loadCustomerDeliveryData(customerid);
+            } else {
+                showErrorMessage();
+            }
+        },
+        error: function (error) {
+            console.log(error);
+            showErrorMessage();
+        },
+        complete: function () {
+        }
+
+    });
+}
+
+
+function loadCustomerDeliveryData(id) {
+    $.ajax({
+        type: 'GET',
+        url: '/Customer/loadCustomerDeliveryData/' + id,
+        success: function (response) {
+            console.log(response)
+            if (response.data.success) {
+
+                var data = [];
+                for (i = 0; i < response.data.result.length; i++) {
+                    var deleivery_data_id = response.data.result[i]['id'];
+                    var address = response.data.result[i]['address'];
+                    var contact_no = response.data.result[i]['contact_no'];
+
+
+
+                    data.push({
+                        "address": address,
+                        "contact": contact_no,
+                        "edit": '<button type="button" class="btn btn-primary" onclick="editDeliveryData(' + deleivery_data_id + ')"><i class="fa fa-pencil-square-o" aria-hidden="true"></i></button>',
+                        "delete": '<button type="button" class="btn btn-danger" onclick="deleteDeliveryData(' + deleivery_data_id + ')"><i class="fa fa-trash" aria-hidden="true"></i></button>',
+                    });
+                }
+
+                var table = $('#deliveryContactTable').DataTable();
+                table.clear();
+                table.rows.add(data).draw();
+            }
+        }, error: function (data) {
+            console.log('something went wrong');
+        }
+    });
+
+}
+
+
+function editDeliveryData(id) {
+
+    $.ajax({
+        type: 'GET',
+        url: '/Customer/editDeliveryData/' + id,
+        success: function (response) {
+
+            console.log(response.data.result);
+
+            $('#deliveryContactsModal').modal('show');
+            $('#txtDeliveryAddress').val(response.data.result.address);
+            $('#txtDeliveryContact').val(response.data.result.contact_no);
+            $('#hidDeliveryDataID').val(id);
+            $('#btnSaveDeliveryContact').text('Update');
+
+        }, error: function (data) {
+            // console.log('something went wrong');
+        }
+    });
+}
+
+
+
+
+function updateCustomerDelivery() {
+
+    if ($('#txtDeliveryAddress').val().trim().length == 0) {
+        showWarningMessage('Please Enter Delivery address.');
+        return;
+    }
+    if ($('#txtDeliveryContact').val().trim().length == 0) {
+        showWarningMessage('Please Enter Contact Number.');
+        return;
+    }
+    if (!checkStringLength($('#txtDeliveryAddress').val(), 500)) {
+        showWarningMessage('Data too long for "Address".');
+        return;
+    }
+    $.ajax({
+        type: "POST",
+        url: '/Customer/updateCustomerDelivery',
+        data: {
+            "id": $('#hidDeliveryDataID').val(),
+            "address": $('#txtDeliveryAddress').val(),
+            "contact_no": $('#txtDeliveryContact').val(),
+        },
+        headers: {
+            'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+        },
+        timeout: 800000,
+        beforeSend: function () {
+        },
+        success: function (response) {
+            console.log(response);
+            if (response.data.success) {
+                showSuccessMessage('Customer delivery data has been updated successful...!');
+                $('#txtDeliveryAddress').val('');
+                $('#txtDeliveryContact').val('');
+                $('#deliveryContactsModal').modal('hide');
+                loadCustomerDeliveryData(customerid);
+            } else {
+                showErrorMessage();
+            }
+        },
+        error: function (error) {
+            console.log(error);
+            showErrorMessage();
+        },
+        complete: function () {
+        }
+
+    });
+}
+
+
+
+function deleteDeliveryData(id) {
+
+    if (isAssignDeliveryData(id)) {
+        showWarningMessage('Address already assigned to an order.');
+        return;
+    }
+    $.ajax({
+        type: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content') },
+        url: '/Customer/deleteDeliveryData/' + id,
+        success: function (response) {
+            console.log(response);
+            showSuccessMessage('Customer delivery data has been deleted successful...!')
+            loadCustomerDeliveryData(customerid);
+
+        }, error: function (data) {
+            // console.log('something went wrong');
+        }
+    });
+}
+
+
+
+function isAssignDeliveryData(id) {
+
+    var bool = 0;
+    $.ajax({
+        type: 'GET',
+        url: '/Customer/isAssignDeliveryData/' + id,
+        async: false,
+        success: function (response) {
+            if (response == 1) {
+                bool = true;
+            } else {
+                bool = false;
+            }
+        }, error: function (data) {
+            // console.log('something went wrong');
+        }
+    });
+    return bool;
+}
+
+
+
+function checkStringLength(string, maxLength) {
+
+    if (string.length > maxLength) {
+        return false;
+    }
+    return true;
+
+}
 
 /**
 * showSuccessMessage

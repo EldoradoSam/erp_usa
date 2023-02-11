@@ -4,13 +4,26 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-
+use Illuminate\Support\Facades\Auth;
+use Spatie\Activitylog\Contracts\Activity;
+use Spatie\Activitylog\Traits\LogsActivity;
 class BankBranch extends Model
 {
     protected $table = 'st_bank_branches';
     protected $primaryKey = 'bank_branch_id';
-    use HasFactory;
-
+    use HasFactory,LogsActivity;
+    protected static $logAttributes = [
+        'bank_branch_id',
+        'bank_branch_name',
+        'status',
+    ];
+    protected static $logOnlyDirty = true;
+    public function tapActivity(Activity $activity, string $eventName)
+    {
+        $activity->log_name = "st_bank_branches";
+        $activity->description = $eventName;
+        $activity->causer_id = Auth::user()->id;
+    }
     // protected $fillable = [];
     
     // protected static function newFactory()
@@ -18,3 +31,4 @@ class BankBranch extends Model
     //     return \Modules\St\Database\factories\BankBranchFactory::new();
     // }
 }
+

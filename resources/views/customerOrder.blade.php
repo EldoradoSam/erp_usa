@@ -9,8 +9,8 @@
 <link rel="stylesheet" href="{{ url('assets/js/autocomplete2/css/autocomplete.min.css') }}" type="text/css">
 <!-- Css -->
 <link rel="stylesheet" href="{{ url('vendors/dropzone/dropzone.css') }}" type="text/css">
-<link rel="stylesheet" href="{{ url('assets/css/hr/employee.css') }}" type="text/css">
-<link rel="stylesheet" href="{{ url('assets/css/hr/settings.css') }}" media="all" type="text/css" />
+<link rel="stylesheet" href="{{ url('assets/css/employee.css') }}" type="text/css">
+<link rel="stylesheet" href="{{ url('assets/css/settings.css') }}" media="all" type="text/css" />
 
 
 <meta name="csrf-token" content="{{ csrf_token() }}">
@@ -68,7 +68,7 @@
                                 <div class="col-md-6 mb-3">
                                     <i class="fa fa-pencil text-info" aria-hidden="true"></i>
                                     <label for="txtName">3. Factory PO number</label>
-                                    <input type="text" class="form-control required-input" id="txtFactoryPo" name="txtFactoryPo" placeholder="Factory PO number" required="" AutoComplete="off">
+                                    <input type="text" class="form-control required-input integer" id="txtFactoryPo" name="txtFactoryPo" placeholder="Factory PO number" required="" AutoComplete="off">
                                 </div>
 
                                 <div class="col-md-6 mb-3">
@@ -93,10 +93,20 @@
                             <div class="form-row">
                                 <div class="col-md-12">
                                     <div class="form-row">
-                                        <div class="col-md-12 mb-3">
+                                        <div class="col-md-12 mb-0">
                                             <i class="fa fa-address-book-o text-info" aria-hidden="true"></i>
                                             <label for="txtDeliveryAddress">6. Customer Delivery Address & Contact</label>
-                                            <textarea class="form-control required-input" id="txtDeliveryAddress" name="txtDeliveryAddress"></textarea>
+                                            <select class="form-control" id="cmbDeliveryAddress" name="cmbDeliveryAddress"></select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-row">
+                                <div class="col-md-12">
+                                    <div class="form-row">
+                                        <div class="col-md-12 mb-3">
+                                            <textarea class="form-control required-input" id="txtDisplayDeliveryAddress" disabled></textarea>
                                         </div>
                                     </div>
                                 </div>
@@ -184,7 +194,7 @@
 
                             <div class="form-row mt-2 mb-3 ml-1">
                                 <div id="orderdata">
-                                    <button name="addorderdatamodel" id="btnAddOrderDataModel" type="button" class="btn btn-primary" onclick="showModelAddOrderData()">
+                                    <button name="addorderdatamodel" id="btnAddOrderDataModel" type="button" class="btn btn-primary">
                                         <i class="fa fa-plus" aria-hidden="true"></i>
                                     </button>
                                 </div>
@@ -274,7 +284,7 @@
                 <br>
 
 
-                <div class="form-row">
+                <div class="form-row" id="actionArea">
                     <div class="col-md-12 mb-3">
                         <button type="button" class="btn btn-warning" id="btnResetOrder">Reset</button>
                         <button type="button" class="btn btn-primary" id="btnSaveOrder">Save</button>
@@ -291,12 +301,11 @@
                     <div class="col-md-6 mb-3">
                         <textarea id="txtOrderThread" class="form-control" style="min-height: 200px;"></textarea>
                         <div style="text-align: right; padding-top:10px;">
+                            <button id="btnSubmitAttachment" type="button" class="btn btn-primary">Attachment</button>
                             <button id="btnSubmitThread" type="button" class="btn btn-success">Submit</button>
                         </div>
                     </div>
                 </div>
-
-
             </div>
         </div>
     </div>
@@ -335,6 +344,14 @@
                             <div class="valid-feedback">
                                 Looks good!
                             </div>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="col-md-12 mb-3">
+                            <i class="fa fa-pencil text-info" aria-hidden="true"></i>
+                            <label for="txtProductCode">Description</label>
+                            <textarea class="form-control" id="txtOrderDataDescription" name="orderDataDescription" required="" AutoComplete="off"></textarea>
                         </div>
                     </div>
 
@@ -816,6 +833,7 @@
                 <button type="button" name="saveorderdata" id="btnSaveOrderData" class="btn btn-primary">Save</button>
                 <button type="button" name="canceladdorder" id="btnCancelAddOrder" class="btn btn-warning" data-dismiss="modal">Cancel</button>
             </div>
+
         </div>
     </div>
 </div>
@@ -853,9 +871,9 @@
                     </div>
                 </div>
                 <div class="modal-footer">
+                    <button type="button" id="btnSaveAttachment" class="btn btn-primary">Save</button>
                     <button type="button" class="btn btn-danger" data-dismiss="modal">Close
                     </button>
-
                 </div>
             </div>
         </div>
@@ -876,6 +894,7 @@
 <script src="{{ url('assets/js/autocomplete2/js/autocomplete.min.js') }}?random=<?php echo uniqid(); ?>"></script>
 <script src="{{ url('assets/js/rquired_input.min.js') }}?random=<?php echo uniqid(); ?>"></script>
 <script src="{{ url('assets/js/progress_widget.js') }}?random=<?php echo uniqid(); ?>"></script>
+<script src="{{ url('assets/js/numeric.js') }}?random=<?php echo uniqid(); ?>"></script>
 <script src="{{ url('assets/js/customer_order2.js') }}?random=<?php echo uniqid(); ?>"></script>
 <script src="{{ url('assets/js/customer_order_thread.js') }}?random=<?php echo uniqid(); ?>"></script>
 
